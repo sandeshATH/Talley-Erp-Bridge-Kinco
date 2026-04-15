@@ -11,12 +11,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@ngrok/ngrok": "^1.7.0",
     "axios": "^1.13.3",
+    "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "node-cron": "^4.2.1",
+    "xlsx": "^0.18.5",
     "xml2js": "^0.6.2"
   },
-  "devDependencies": {},
   "description": ""
 }

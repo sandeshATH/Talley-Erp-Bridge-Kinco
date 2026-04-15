@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TallyBridge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #09090b;
+      --surface:     #111115;
+      --surface2:    #1c1c22;
+      --surface3:    #26262f;
+      --border:      #2e2e38;
+      --border-soft: #222228;
+      --text:        #f4f4f5;
+      --text-soft:   #a1a1aa;
+      --text-xsoft:  #52525b;
+      --green:       #22c55e;
+      --green-dim:   rgba(34,197,94,.12);
+      --red:         #ef4444;
+      --red-dim:     rgba(239,68,68,.12);
+      --yellow:      #eab308;
+      --accent:      #6366f1;
+      --accent-soft: rgba(99,102,241,.15);
+      --accent-dim:  rgba(99,102,241,.08);
+      --accent-text: #818cf8;
+      --radius-sm:   6px;
+      --radius:      10px;
+      --radius-lg:   14px;
+      --radius-xl:   18px;
+    }
+
+    html { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Scrollbar ──────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    /* ─── Header ─────────────────────────────────────── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(9,9,11,.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-soft);
+      padding: 0 28px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header-left  { display: flex; align-items: center; gap: 16px; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    /* Logo */
+    .logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .logo-icon {
+      width: 30px; height: 30px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-icon svg { width: 16px; height: 16px; fill: #fff; }
+    .logo-wordmark { font-size: 16px; font-weight: 700; letter-spacing: -0.4px; color: var(--text); }
+    .logo-wordmark span { color: var(--accent-text); }
+
+    /* Company pill */
+    .company-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 12px 4px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-soft);
+      max-width: 240px;
+      overflow: hidden;
+    }
+    .company-pill svg { width: 13px; height: 13px; opacity: .6; flex-shrink: 0; }
+    .company-pill .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Status badge */
+    .status-badge {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 12px; font-weight: 500;
+      cursor: default;
+      user-select: none;
+    }
+    .pulse-dot {
+      position: relative;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--text-xsoft);
+      flex-shrink: 0;
+    }
+    .pulse-dot.online  { background: var(--green); }
+    .pulse-dot.offline { background: var(--red); }
+    .pulse-dot.online::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background: var(--green);
+      opacity: .3;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { transform: scale(1);   opacity: .3; }
+      50%      { transform: scale(1.8); opacity: 0; }
+    }
+
+    /* Icon button */
+    .icon-btn {
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .icon-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border); }
+    .icon-btn svg { width: 16px; height: 16px; }
+
+    /* ─── Main ───────────────────────────────────────── */
+    main {
+      flex: 1;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 36px 28px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+    }
+
+    /* ─── Section header ─────────────────────────────── */
+    .section-hd {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--text-xsoft);
+    }
+
+    /* ─── Config grid ────────────────────────────────── */
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 10px;
+    }
+    .cfg-card {
+      background: var(--surface2);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .cfg-card .cfg-label {
+      font-size: 10.5px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text-xsoft);
+    }
+    .cfg-card .cfg-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      word-break: break-all;
+    }
+    .cfg-card .cfg-value.accent { color: var(--accent-text); }
+
+    /* ─── Data grid ──────────────────────────────────── */
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .data-card {
+      background: var(--surface);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-lg);
+      padding: 22px 22px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      transition: border-color .2s, box-shadow .2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .data-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--card-tint, transparent) 0%, transparent 60%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .data-card:hover { border-color: var(--border); box-shadow: 0 0 0 1px var(--border-soft); }
+    .data-card:hover::before { opacity: 1; }
+
+    .data-card[data-key="customers"] { --card-tint: rgba(99,102,241,.05); }
+    .data-card[data-key="invoices"]  { --card-tint: rgba(234,179,8,.04); }
+    .data-card[data-key="stock"]     { --card-tint: rgba(34,197,94,.04); }
+    .data-card[data-key="vouchers"]  { --card-tint: rgba(236,72,153,.04); }
+
+    /* Card icon */
+    .card-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px;
+      flex-shrink: 0;
+    }
+    .card-icon svg { width: 18px; height: 18px; }
+    .icon-indigo { background: rgba(99,102,241,.15); color: #818cf8; }
+    .icon-yellow { background: rgba(234,179,8,.15);  color: #facc15; }
+    .icon-green  { background: rgba(34,197,94,.15);  color: #4ade80; }
+    .icon-pink   { background: rgba(236,72,153,.15); color: #f472b6; }
+
+    /* Card meta */
+    .card-title {
+      font-size: 14px; font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    .card-desc {
+      font-size: 12px;
+      color: var(--text-xsoft);
+      margin-bottom: 18px;
+    }
+
+    /* Count */
+    .card-count {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 4px;
+      min-height: 36px;
+      display: flex; align-items: center;
+    }
+    .card-count.muted { color: var(--text-xsoft); font-size: 20px; font-weight: 400; letter-spacing: 0; }
+    .card-sync-time {
+      font-size: 11px;
+      color: var(--text-xsoft);
+      margin-bottom: 18px;
+      min-height: 16px;
+    }
+
+    /* Divider */
+    .card-divider {
+      height: 1px;
+      background: var(--border-soft);
+      margin: 0 -22px 16px;
+    }
+
+    /* Card actions */
+    .card-actions {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* ─── Buttons ─────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: background .15s, opacity .15s, box-shadow .15s;
+      text-decoration: none;
+    }
+    .btn:disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
+    .btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 1px 2px rgba(0,0,0,.3);
+    }
+    .btn-primary:hover { background: #5254cc; }
+    .btn-primary:active { background: #4547bb; }
+
+    .btn-ghost {
+      background: var(--surface3);
+      color: var(--text-soft);
+      border: 1px solid var(--border-soft);
+    }
+    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+    .btn-icon-sm {
+      width: 28px; height: 28px;
+      padding: 0;
+      border-radius: var(--radius-sm);
+      background: var(--surface3);
+      border: 1px solid var(--border-soft);
+      color: var(--text-soft);
+    }
+    .btn-icon-sm:hover { background: var(--surface2); color: var(--text); }
+    .btn-icon-sm svg { width: 13px; height: 13px; }
+
+    /* Spinner */
+    .spinner {
+      width: 12px; height: 12px;
+      border: 2px solid rgba(255,255,255,.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      display: none;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn.loading .spinner { display: block; }
+    .btn.loading .btn-label { opacity: .6; }
+
+    /* ─── Refresh All ─────────────────────────────────── */
+    .refresh-all-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-soft);
+      font-family: inherit;
+      font-size: 12px; font-weight: 500;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .refresh-all-btn:hover { background: var(--surface2); color: var(--text); }
+    .refresh-all-btn svg { width: 13px; height: 13px; }
+
+    /* ─── Download dropdown ───────────────────────────── */
+    .dl-group { position: relative; display: none; }
+    .dl-group.visible { display: flex; }
+    .dl-trigger {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 7px 10px;
+      background: var(--surface3);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm);
+      color: var(--text-soft);
+      font-family: inherit;
+      font-size: 12px; font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .dl-trigger:hover { background: var(--surface2); color: var(--text); }
+    .dl-trigger svg { width: 12px; height: 12px; }
+    .dl-chevron { width: 10px !important; height: 10px !important; transition: transform .15s; }
+    .dl-trigger.open .dl-chevron { transform: rotate(180deg); }
+
+    .dl-menu {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 4px;
+      min-width: 150px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+      display: none;
+      flex-direction: column;
+      gap: 1px;
+      z-index: 100;
+    }
+    .dl-menu.open { display: flex; }
+
+    .dl-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      color: var(--text-soft);
+      font-size: 12px; font-weight: 500;
+      cursor: pointer;
+      transition: background .12s, color .12s;
+      border: none; background: transparent;
+      font-family: inherit; text-align: left; width: 100%;
+    }
+    .dl-item:hover { background: var(--surface3); color: var(--text); }
+    .dl-item svg { width: 13px; height: 13px; flex-shrink: 0; opacity: .7; }
+    .dl-item-badge {
+      margin-left: auto;
+      font-size: 9px; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase;
+      background: var(--accent-soft);
+      color: var(--accent-text);
+      border-radius: 3px;
+      padding: 1px 5px;
+    }
+
+    /* ─── Settings drawer ─────────────────────────────── */
+    .drawer-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      backdrop-filter: blur(2px);
+      z-index: 200;
+      display: none;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .drawer-overlay.open { display: block; }
+    .drawer-overlay.visible { opacity: 1; }
+
+    .drawer {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 360px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 201;
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform .25s cubic-bezier(.4,0,.2,1);
+    }
+    .drawer.open { transform: translateX(0); }
+
+    .drawer-header {
+      padding: 20px 22px 18px;
+      border-bottom: 1px solid var(--border-soft);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .drawer-title { font-size: 14px; font-weight: 600; }
+    .drawer-close {
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      background: transparent; border: none;
+      color: var(--text-soft); cursor: pointer; border-radius: 6px;
+      transition: background .15s, color .15s;
+    }
+    .drawer-close:hover { background: var(--surface2); color: var(--text); }
+    .drawer-close svg { width: 16px; height: 16px; }
+
+    .drawer-body { padding: 22px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 12px; font-weight: 500; color: var(--text-soft); }
+    .field input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .15s;
+      width: 100%;
+    }
+    .field input:focus { border-color: var(--accent); }
+    .field input::placeholder { color: var(--text-xsoft); }
+    .field-hint { font-size: 11px; color: var(--text-xsoft); }
+
+    .info-row { display: flex; flex-direction: column; gap: 8px; }
+    .info-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+    }
+    .info-item .k { font-size: 12px; color: var(--text-soft); }
+    .info-item .v { font-size: 12px; font-weight: 600; color: var(--text); }
+
+    /* ─── ngrok banner ────────────────────────────────── */
+    .ngrok-banner {
+      display: none;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-soft);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .ngrok-banner.visible { display: flex; }
+    .ngrok-banner svg { width: 16px; height: 16px; color: var(--accent-text); flex-shrink: 0; margin-top: 1px; }
+    .ngrok-banner .ngrok-text { flex: 1; }
+    .ngrok-banner .ngrok-label { font-size: 12px; font-weight: 600; color: var(--accent-text); margin-bottom: 2px; }
+    .ngrok-banner .ngrok-url { font-size: 12px; color: var(--text-soft); word-break: break-all; }
+    .ngrok-banner .ngrok-url a { color: var(--accent-text); text-decoration: none; }
+    .ngrok-banner .ngrok-url a:hover { text-decoration: underline; }
+    .copy-btn {
+      flex-shrink: 0;
+      padding: 5px 10px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(99,102,241,.3);
+      border-radius: var(--radius-sm);
+      color: var(--accent-text);
+      font-family: inherit;
+      font-size: 11px; font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+      white-space: nowrap;
+    }
+    .copy-btn:hover { background: rgba(99,102,241,.25); }
+
+    /* ─── Toast ───────────────────────────────────────── */
+    #toast-container {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+      z-index: 999;
+    }
+    .toast {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+      font-size: 13px; font-weight: 500;
+      animation: slideIn .2s ease;
+      max-width: 320px;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(20px); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+    .toast.success { border-color: rgba(34,197,94,.3); }
+    .toast.error   { border-color: rgba(239,68,68,.3); }
+    .toast .t-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .toast.success .t-dot { background: var(--green); }
+    .toast.error   .t-dot { background: var(--red); }
+
+    /* ─── Footer ──────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border-soft);
+      padding: 14px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+    .footer-brand { font-size: 12px; font-weight: 600; color: var(--text-xsoft); letter-spacing: -.2px; }
+    .footer-brand span { color: var(--accent-text); }
+    .footer-right { display: flex; align-items: center; gap: 12px; }
+    .footer-tag {
+      font-size: 11px;
+      color: var(--text-xsoft);
+      background: var(--surface2);
+      border: 1px solid var(--border-soft);
+      border-radius: 999px;
+      padding: 2px 9px;
+    }
+
+    /* ─── Responsive ──────────────────────────────────── */
+    @media (max-width: 600px) {
+      header { padding: 0 16px; }
+      main { padding: 24px 16px 40px; }
+      .drawer { width: 100%; }
+      .company-pill { display: none; }
+      footer { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── Header ──────────────────────────────────────── -->
+<header>
+  <div class="header-left">
+    <a class="logo" href="/">
+      <div class="logo-icon">
+        <!-- bridge icon -->
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 17h18v2H3v-2zm0-6h2v4H3v-4zm16 0h2v4h-2v-4zM8 11h8v4H8v-4zM3 5h18v2H3V5z"/>
+        </svg>
+      </div>
+      <span class="logo-wordmark">Tally<span>Bridge</span></span>
+    </a>
+
+    <div class="company-pill" id="company-pill">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+      <span class="name" id="cfg-company">Loading…</span>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <div class="status-badge">
+      <div class="pulse-dot" id="status-dot"></div>
+      <span id="status-text">Checking…</span>
+    </div>
+    <button class="icon-btn" onclick="openDrawer()" title="Settings">
+      <!-- gear icon -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- ─── Main ─────────────────────────────────────────── -->
+<main>
+
+  <!-- ngrok banner -->
+  <div class="ngrok-banner" id="ngrok-banner">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+    </svg>
+    <div class="ngrok-text">
+      <div class="ngrok-label">Public URL — share with AI</div>
+      <div class="ngrok-url"><a id="ngrok-url-link" href="#" target="_blank"></a></div>
+    </div>
+    <button class="copy-btn" id="copy-url-btn" onclick="copyNgrokUrl()">Copy</button>
+  </div>
+
+  <!-- Connection config -->
+  <section>
+    <div class="section-hd">
+      <span class="section-label">Connection</span>
+    </div>
+    <div class="config-grid">
+      <div class="cfg-card">
+        <div class="cfg-label">Tally Host</div>
+        <div class="cfg-value accent" id="cfg-host">—</div>
+      </div>
+      <div class="cfg-card">
+        <div class="cfg-label">Tally Port</div>
+        <div class="cfg-value" id="cfg-port">—</div>
+      </div>
+      <div class="cfg-card">
+        <div class="cfg-label">Server Port</div>
+        <div class="cfg-value" id="cfg-server-port">—</div>
+      </div>
+      <div class="cfg-card">
+        <div class="cfg-label">Mode</div>
+        <div class="cfg-value" id="cfg-mode">—</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Data -->
+  <section>
+    <div class="section-hd">
+      <span class="section-label">Data</span>
+      <button class="refresh-all-btn" id="refresh-all-btn" onclick="fetchAll()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        Sync All
+      </button>
+    </div>
+
+    <div class="data-grid">
+
+      <!-- Customers -->
+      <div class="data-card" data-key="customers">
+        <div class="card-icon icon-indigo">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        </div>
+        <div class="card-title">Customers</div>
+        <div class="card-desc">Ledger accounts from Tally</div>
+        <div class="card-count muted" id="count-customers">—</div>
+        <div class="card-sync-time" id="sync-customers"></div>
+        <div class="card-divider"></div>
+        <div class="card-actions">
+          <button class="btn btn-primary" id="btn-customers" onclick="fetchData('customers')">
+            <div class="spinner"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.07-8.07"/></svg>
+            <span class="btn-label">Sync</span>
+          </button>
+          <div class="dl-group" id="dlg-customers">
+            <button class="dl-trigger" onclick="toggleDlMenu('customers')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+              <svg class="dl-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="dl-menu" id="dlm-customers">
+              <button class="dl-item" onclick="downloadJson('customers'); closeDlMenu('customers')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                JSON <span class="dl-item-badge">local</span>
+              </button>
+              <button class="dl-item" onclick="downloadFromServer('customers','excel'); closeDlMenu('customers')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+                Excel <span class="dl-item-badge">xlsx</span>
+              </button>
+              <button class="dl-item" onclick="downloadFromServer('customers','csv'); closeDlMenu('customers')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                CSV <span class="dl-item-badge">csv</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invoices -->
+      <div class="data-card" data-key="invoices">
+        <div class="card-icon icon-yellow">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        </div>
+        <div class="card-title">Invoices</div>
+        <div class="card-desc">Sales register entries</div>
+        <div class="card-count muted" id="count-invoices">—</div>
+        <div class="card-sync-time" id="sync-invoices"></div>
+        <div class="card-divider"></div>
+        <div class="card-actions">
+          <button class="btn btn-primary" id="btn-invoices" onclick="fetchData('invoices')">
+            <div class="spinner"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.07-8.07"/></svg>
+            <span class="btn-label">Sync</span>
+          </button>
+          <div class="dl-group" id="dlg-invoices">
+            <button class="dl-trigger" onclick="toggleDlMenu('invoices')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+              <svg class="dl-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="dl-menu" id="dlm-invoices">
+              <button class="dl-item" onclick="downloadJson('invoices'); closeDlMenu('invoices')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                JSON <span class="dl-item-badge">local</span>
+              </button>
+              <button class="dl-item" onclick="downloadFromServer('invoices','excel'); closeDlMenu('invoices')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+                Excel <span class="dl-item-badge">xlsx</span>
+              </button>
+              <button class="dl-item" onclick="downloadFromServer('invoices','csv'); closeDlMenu('invoices')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                CSV <span class="dl-item-badge">csv</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stock -->
+      <div class="data-card" data-key="stock">
+        <div class="card-icon icon-green">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 11h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        </div>
+        <div class="card-title">Stock Items</div>
+        <div class="card-desc">Inventory from Tally</div>
+        <div class="card-count muted" id="count-stock">—</div>
+        <div class="card-sync-time" id="sync-stock"></div>
+        <div class="card-divider"></div>
+        <div class="card-actions">
+          <button class="btn btn-primary" id="btn-stock" onclick="fetchData('stock')">
+            <div class="spinner"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.07-8.07"/></svg>
+            <span class="btn-label">Sync</span>
+          </button>
+          <div class="dl-group" id="dlg-stock">
+            <button class="dl-trigger" onclick="toggleDlMenu('stock')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+              <svg class="dl-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="dl-menu" id="dlm-stock">
+              <button class="dl-item" onclick="downloadJson('stock'); closeDlMenu('stock')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                JSON <span class="dl-item-badge">local</span>
+              </button>
+              <button class="dl-item" onclick="downloadFromServer('stock','excel'); closeDlMenu('stock')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+                Excel <span class="dl-item-badge">xlsx</span>
+              </button>
+              <button class="dl-item" onclick="downloadFromServer('stock','csv'); closeDlMenu('stock')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                CSV <span class="dl-item-badge">csv</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vouchers -->
+      <div class="data-card" data-key="vouchers">
+        <div class="card-icon icon-pink">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg>
+        </div>
+        <div class="card-title">Sales Book</div>
+        <div class="card-desc">Day Book vouchers</div>
+        <div class="card-count muted" id="count-vouchers">—</div>
+        <div class="card-sync-time" id="sync-vouchers"></div>
+        <div class="card-divider"></div>
+        <div class="card-actions">
+          <button class="btn btn-primary" id="btn-vouchers" onclick="fetchData('vouchers')">
+            <div class="spinner"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.07-8.07"/></svg>
+            <span class="btn-label">Sync</span>
+          </button>
+          <div class="dl-group" id="dlg-vouchers">
+            <button class="dl-trigger" onclick="toggleDlMenu('vouchers')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+              <svg class="dl-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="dl-menu" id="dlm-vouchers">
+              <button class="dl-item" onclick="downloadJson('vouchers'); closeDlMenu('vouchers')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                JSON <span class="dl-item-badge">local</span>
+              </button>
+              <button class="dl-item" onclick="downloadFromServer('vouchers','excel'); closeDlMenu('vouchers')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+                Excel <span class="dl-item-badge">xlsx</span>
+              </button>
+              <button class="dl-item" onclick="downloadFromServer('vouchers','csv'); closeDlMenu('vouchers')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                CSV <span class="dl-item-badge">csv</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- ─── Footer ─────────────────────────────────────── -->
+<footer>
+  <span class="footer-brand">Tally<span>Bridge</span></span>
+  <div class="footer-right">
+    <span class="footer-tag" id="mode-tag">Local Mode</span>
+    <span class="footer-tag">v1.0</span>
+  </div>
+</footer>
+
+<!-- ─── Settings Drawer ─────────────────────────────── -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="settings-drawer">
+  <div class="drawer-header">
+    <span class="drawer-title">Settings</span>
+    <button class="drawer-close" onclick="closeDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body">
+    <div class="field">
+      <label for="api-key-input">API Key (x-api-key)</label>
+      <input id="api-key-input" type="password" placeholder="Leave blank if not configured" autocomplete="off" />
+      <span class="field-hint">Required only if API_KEY is set in your .env file.</span>
+    </div>
+
+    <div>
+      <div class="section-label" style="margin-bottom:10px">Server Info</div>
+      <div class="info-row">
+        <div class="info-item"><span class="k">Tally Host</span><span class="v" id="d-host">—</span></div>
+        <div class="info-item"><span class="k">Tally Port</span><span class="v" id="d-port">—</span></div>
+        <div class="info-item"><span class="k">Company</span><span class="v" id="d-company">—</span></div>
+        <div class="info-item"><span class="k">Server Port</span><span class="v" id="d-server-port">—</span></div>
+        <div class="info-item"><span class="k">ngrok</span><span class="v" id="d-ngrok">Disabled</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Toast Container ─────────────────────────────── -->
+<div id="toast-container"></div>
+
+<script>
+'use strict';
+
+// ── State ──────────────────────────────────────────────
+const store    = {};
+const syncTime = {};
+let ngrokUrl   = null;
+
+// ── API helpers ────────────────────────────────────────
+const apiKey = () => document.getElementById('api-key-input').value.trim();
+
+const reqHeaders = () => {
+  const h = {};
+  const k = apiKey();
+  if (k) h['x-api-key'] = k;
+  return h;
+};
+
+const exportRoute = {
+  customers: '/api/customers/export',
+  invoices:  '/api/invoices/export',
+  stock:     '/api/stock/export',
+  vouchers:  '/api/vouchers/export',
+};
+
+const countOf = {
+  customers: r => (r.data  || []).length,
+  invoices:  r => (r.data  || []).length,
+  stock:     r => r.count  ?? (r.data || []).length,
+  vouchers:  r => r.count  ?? (r.data || []).length,
+};
+
+const unitOf = { customers:'customers', invoices:'invoices', stock:'items', vouchers:'vouchers' };
+
+// ── Toast ──────────────────────────────────────────────
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<div class="t-dot"></div><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// ── Health polling ─────────────────────────────────────
+async function checkHealth() {
+  const dot  = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  try {
+    const r = await fetch('/health');
+    if (r.ok) {
+      dot.className    = 'pulse-dot online';
+      text.textContent = 'Tally Connected';
+    } else { throw 0; }
+  } catch {
+    dot.className    = 'pulse-dot offline';
+    text.textContent = 'Tally Offline';
+  }
+}
+
+// ── Config ─────────────────────────────────────────────
+async function loadConfig() {
+  try {
+    const cfg = await fetch('/api/config').then(r => r.json());
+
+    // Header + drawer
+    document.getElementById('cfg-company').textContent     = cfg.company;
+    document.getElementById('cfg-host').textContent        = cfg.tallyHost;
+    document.getElementById('cfg-port').textContent        = cfg.tallyPort;
+    document.getElementById('cfg-server-port').textContent = cfg.serverPort;
+    document.getElementById('d-host').textContent          = cfg.tallyHost;
+    document.getElementById('d-port').textContent          = cfg.tallyPort;
+    document.getElementById('d-company').textContent       = cfg.company;
+    document.getElementById('d-server-port').textContent   = cfg.serverPort;
+
+    // Mode
+    const isLocal  = cfg.tallyHost === '127.0.0.1' || cfg.tallyHost === 'localhost';
+    const modeText = cfg.ngrokEnabled ? 'Remote Mode' : isLocal ? 'Local Mode' : 'LAN Mode';
+    document.getElementById('cfg-mode').textContent      = modeText;
+    document.getElementById('mode-tag').textContent      = modeText;
+    document.getElementById('d-ngrok').textContent       = cfg.ngrokEnabled ? 'Enabled' : 'Disabled';
+
+    // ngrok banner
+    if (cfg.publicUrl) {
+      ngrokUrl = cfg.publicUrl;
+      const banner = document.getElementById('ngrok-banner');
+      banner.classList.add('visible');
+      const link = document.getElementById('ngrok-url-link');
+      link.href        = cfg.publicUrl;
+      link.textContent = cfg.publicUrl;
+    }
+  } catch (e) {
+    console.warn('Config load failed', e);
+  }
+}
+
+// ── Fetch data ─────────────────────────────────────────
+async function fetchData(key) {
+  const btn      = document.getElementById(`btn-${key}`);
+  const countEl  = document.getElementById(`count-${key}`);
+  const syncEl   = document.getElementById(`sync-${key}`);
+  const dlg      = document.getElementById(`dlg-${key}`);
+
+  btn.classList.add('loading');
+  btn.disabled   = true;
+  countEl.className   = 'card-count muted';
+  countEl.textContent = '…';
+  syncEl.textContent  = '';
+  dlg.classList.remove('visible');
+
+  const endpoints = {
+    customers: '/api/customers',
+    invoices:  '/api/invoices',
+    stock:     '/api/stock',
+    vouchers:  '/api/vouchers',
+  };
+
+  try {
+    const res  = await fetch(endpoints[key], { headers: reqHeaders() });
+    const json = await res.json();
+
+    if (!res.ok) {
+      countEl.textContent = '!';
+      syncEl.textContent  = json.error || `Error ${res.status}`;
+      toast(json.error || `Error ${res.status}`, 'error');
+      return;
+    }
+
+    store[key]      = json;
+    syncTime[key]   = new Date();
+    const count     = countOf[key](json);
+    countEl.className   = 'card-count';
+    countEl.textContent = count.toLocaleString();
+    syncEl.textContent  = `${count} ${unitOf[key]} · just now`;
+    dlg.classList.add('visible');
+    toast(`Fetched ${count} ${unitOf[key]}`);
+    startSyncTimer(key);
+  } catch (e) {
+    countEl.textContent = '!';
+    syncEl.textContent  = 'Network error';
+    toast('Network error', 'error');
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+async function fetchAll() {
+  const btn = document.getElementById('refresh-all-btn');
+  btn.disabled = true;
+  await Promise.allSettled(['customers','invoices','stock','vouchers'].map(fetchData));
+  btn.disabled = false;
+}
+
+// ── Relative time ──────────────────────────────────────
+function startSyncTimer(key) {
+  const el = document.getElementById(`sync-${key}`);
+  clearInterval(el._timer);
+  el._timer = setInterval(() => {
+    if (!syncTime[key]) return;
+    const secs = Math.floor((Date.now() - syncTime[key]) / 1000);
+    const count = countOf[key](store[key] || {});
+    const rel = secs < 60 ? `${secs}s ago` : `${Math.floor(secs/60)}m ago`;
+    el.textContent = `${count.toLocaleString()} ${unitOf[key]} · ${rel}`;
+  }, 10000);
+}
+
+// ── Download ───────────────────────────────────────────
+function downloadJson(key) {
+  if (!store[key]) return;
+  const blob = new Blob([JSON.stringify(store[key], null, 2)], { type: 'application/json' });
+  triggerDownload(blob, `${key}.json`);
+}
+
+async function downloadFromServer(key, format) {
+  try {
+    const url = `${exportRoute[key]}?format=${format}`;
+    const res = await fetch(url, { headers: reqHeaders() });
+    if (!res.ok) { toast('Export failed', 'error'); return; }
+    const blob = await res.blob();
+    const ext  = format === 'excel' ? 'xlsx' : 'csv';
+    triggerDownload(blob, `${key}.${ext}`);
+    toast(`${key}.${ext} downloaded`);
+  } catch {
+    toast('Download failed', 'error');
+  }
+}
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a   = Object.assign(document.createElement('a'), { href: url, download: filename });
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Download dropdown ──────────────────────────────────
+function toggleDlMenu(key) {
+  const trigger = document.querySelector(`#dlg-${key} .dl-trigger`);
+  const menu    = document.getElementById(`dlm-${key}`);
+  const isOpen  = menu.classList.contains('open');
+  closeAllDlMenus();
+  if (!isOpen) {
+    menu.classList.add('open');
+    trigger.classList.add('open');
+  }
+}
+
+function closeDlMenu(key) {
+  document.getElementById(`dlm-${key}`).classList.remove('open');
+  document.querySelector(`#dlg-${key} .dl-trigger`).classList.remove('open');
+}
+
+function closeAllDlMenus() {
+  document.querySelectorAll('.dl-menu').forEach(m => m.classList.remove('open'));
+  document.querySelectorAll('.dl-trigger').forEach(t => t.classList.remove('open'));
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.dl-group')) closeAllDlMenus();
+});
+
+// ── Settings drawer ────────────────────────────────────
+function openDrawer() {
+  const overlay = document.getElementById('drawer-overlay');
+  const drawer  = document.getElementById('settings-drawer');
+  overlay.classList.add('open');
+  requestAnimationFrame(() => {
+    overlay.classList.add('visible');
+    drawer.classList.add('open');
+  });
+}
+
+function closeDrawer() {
+  const overlay = document.getElementById('drawer-overlay');
+  const drawer  = document.getElementById('settings-drawer');
+  overlay.classList.remove('visible');
+  drawer.classList.remove('open');
+  setTimeout(() => overlay.classList.remove('open'), 250);
+}
+
+// ── Copy ngrok URL ─────────────────────────────────────
+function copyNgrokUrl() {
+  if (!ngrokUrl) return;
+  navigator.clipboard.writeText(ngrokUrl).then(() => {
+    const btn = document.getElementById('copy-url-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+  });
+}
+
+// ── Init ───────────────────────────────────────────────
+checkHealth();
+loadConfig();
+setInterval(checkHealth, 5000);
+// Refresh config every 10s so ngrok URL appears as soon as it's ready
+setInterval(loadConfig, 10000);
+</script>
+</body>
+</html>
